@@ -54,7 +54,7 @@ body.is-widget-view {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.005);
+  background: transparent !important;
   display: block;
 }
 
@@ -1193,27 +1193,41 @@ body.is-widget-view #app {
 }
 
 /* ==========================================================================
-   고도화된 모던 글래스모피즘 & 네온 UI 테마
+   고도화된 모던 다크 & 네온 UI 테마 (투명 창 사각형 잔상/블러 찐빠 완전 제거)
    ========================================================================== */
+html, body, body.is-widget-view, body.is-popup-view, #app {
+  background: transparent !important;
+}
+
 .widget-root {
   border-radius: 9px;
   padding: 4px 10px;
   background: linear-gradient(135deg, rgba(24, 27, 38, var(--bg-alpha)), rgba(14, 16, 24, var(--bg-alpha)));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
 }
 
 .widget-root:hover {
-  background: linear-gradient(135deg, rgba(32, 36, 50, 0.96), rgba(20, 23, 34, 0.98));
-  border-color: rgba(96, 165, 250, 0.45);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 0 12px rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(32, 36, 50, 0.98), rgba(20, 23, 34, 0.99));
+  border-color: rgba(96, 165, 250, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 10px rgba(59, 130, 246, 0.15) !important;
 }
 
 .popup-root {
-  background: linear-gradient(180deg, rgba(22, 25, 36, 0.97) 0%, rgba(13, 15, 22, 0.99) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, #161924 0%, #0e1017 100%);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+.poke-modal-backdrop {
+  border-radius: 14px;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .popup-header {

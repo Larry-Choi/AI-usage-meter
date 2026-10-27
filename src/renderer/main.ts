@@ -121,8 +121,8 @@ function renderWidget(state: AppState) {
           const rect = container.getBoundingClientRect()
           const naturalWidth = Math.max(rect.width, container.scrollWidth)
           // 여유 너비 +24px, 높이는 34px 기본에 맞춰 설정
-          const width = Math.ceil(naturalWidth) + 36
-          const height = Math.max(34, Math.ceil(rect.height) + 4)
+          const width = Math.ceil(naturalWidth)
+          const height = Math.max(34, Math.ceil(rect.height))
           if (width !== lastSentWidth || height !== lastSentHeight) {
             lastSentWidth = width
             lastSentHeight = height

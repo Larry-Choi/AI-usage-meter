@@ -159,6 +159,7 @@ function createWidgetWindow() {
     skipTaskbar: true,
     resizable: false,
     hasShadow: false,
+    backgroundColor: '#00000000',
     focusable: true, // 마우스 클릭 이벤트가 정상적으로 DOM에 전달되도록 true 유지
     show: false,
     title: '', // 불필요한 시스템 타이틀 노출 원천 차단
@@ -264,6 +265,8 @@ function createPopupWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
+    hasShadow: false,
+    backgroundColor: '#00000000',
     show: false,
     title: '', // 불필요한 타이틀 제거
     webPreferences: {
