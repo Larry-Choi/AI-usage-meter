@@ -50,6 +50,13 @@ const ANTIGRAVITY_SVG = `
 </svg>
 `
 
+// 6. Cursor IDE (큐브 로고)
+const CURSOR_SVG = `
+<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+  <path d="M12 1L2 6.5v11L12 23l10-5.5v-11L12 1zm0 2.2l7.7 4.3L12 11.8 4.3 7.5 12 3.2zM4 9.1l7 3.9v7.9l-7-3.9V9.1zm9 11.8v-7.9l7-3.9v7.9l-7 3.9z"/>
+</svg>
+`
+
 // 5. 범용 기본 AI 스파크
 const GENERIC_AI_SVG = `
 <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
@@ -69,6 +76,17 @@ export interface AiBrandInfo {
 export function getAiBrand(provider: string, accountName: string = ''): AiBrandInfo {
   const normProvider = provider.toLowerCase()
   const normName = accountName.toLowerCase()
+
+  // Cursor
+  if (normProvider === 'cursor' || normName.includes('cursor')) {
+    return {
+      name: 'Cursor',
+      svg: CURSOR_SVG,
+      brandColor: '#00D1B2',
+      bgMono: '#374151',
+      colorMono: '#D1D5DB'
+    }
+  }
 
   // 1. Antigravity (사용자 제공 로고)
   if (

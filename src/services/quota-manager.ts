@@ -1,6 +1,7 @@
 import { AntigravityCliClient } from './antigravity-cli-client.js'
 import { fetchClaudeUsage } from './claude-usage-client.js'
 import { CodexLocalClient } from './codex-local-client.js'
+import { CursorLocalClient } from './cursor-local-client.js'
 import { AccountStore } from './account-store.js'
 import type { AccountConfig, AccountUsage } from '../common/types.js'
 
@@ -84,7 +85,8 @@ export class QuotaManager {
           resetCountdown: acc.customMock.weeklyReset,
           isExhausted: acc.customMock.weeklyPercent >= 100
         },
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        pokemon: acc.pokemon
       }
     }
 
@@ -95,6 +97,7 @@ export class QuotaManager {
       iconLetter: acc.name.charAt(0).toUpperCase(),
       brandColor: '#4285F4',
       status: 'loading',
+      pokemon: acc.pokemon,
       primaryQuota: {
         remainingFraction: 1.0,
         percentLeft: 100,
@@ -145,7 +148,8 @@ export class QuotaManager {
                   }
                 }
               }
-              this.usages.set(acc.id, usage)
+              if (usage) usage.pokemon = acc.pokemon
+            this.usages.set(acc.id, usage)
               return
             } else if (acc.provider === 'claude') {
               usage = await fetchClaudeUsage(acc)
@@ -164,11 +168,13 @@ export class QuotaManager {
               }
             } else if (acc.provider === 'codex') {
               usage = await CodexLocalClient.fetchUsage(acc)
+            } else if (acc.provider === 'cursor') {
+              usage = await CursorLocalClient.fetchUsage(acc)
             } else if (QuotaManager.isManualAccount(acc)) {
               // 실시간 조회 대상이 아닌 수동 입력 계정: 입력값이 곧 데이터
               usage = this.createInitialUsage(acc)
+            
             } else {
-              // 실시간 조회 클라이언트가 없는 provider (예: google). 프리셋 숫자로 채우지 않는다
               usage = {
                 ...this.createInitialUsage(acc),
                 status: 'error',
@@ -176,6 +182,7 @@ export class QuotaManager {
               }
             }
 
+            if (usage) usage.pokemon = acc.pokemon;
             this.usages.set(acc.id, usage)
           } catch (err) {
             console.error(`[QuotaManager] Error fetching usage for ${acc.name}:`, err)

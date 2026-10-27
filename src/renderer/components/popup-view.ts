@@ -1,18 +1,21 @@
 import { parseUsageColor } from '../../common/time-utils.js'
 import type { AccountConfig, AccountUsage, AppState, ThemeType, WidgetConfig } from '../../common/types.js'
 import { renderAiIcon } from './ai-icons.js'
+import { getPokemonForAccount, POKEMON_PROFILES } from './pokemon-data.js'
 import { t } from '../../common/i18n.js'
 
 let activeTab: 'usage' | 'accounts' | 'settings' | 'api' = 'usage'
 let hasDetectedApps = false
 let isAddingCustom = false
 let isSliderDragging = false
+let pokemonPickerTarget: { id: string, name: string, currentPokemon?: string } | null = null
 
 // 캐시된 감지 앱 목록
 let cachedDetectedApps: any[] = [
   { id: 'local-antigravity', name: 'Google Antigravity', provider: 'antigravity', installed: true, running: true, iconLetter: 'A', brandColor: '#2563EB' },
   { id: 'local-claude-code', name: 'Claude Code', provider: 'claude', installed: true, running: true, iconLetter: 'C', brandColor: '#D97757' },
-  { id: 'local-codex', name: 'Codex CLI', provider: 'codex', installed: true, running: false, iconLetter: 'X', brandColor: '#6366F1' }
+  { id: 'local-codex', name: 'Codex CLI', provider: 'codex', installed: true, running: false, iconLetter: 'X', brandColor: '#6366F1' },
+  { id: 'local-cursor', name: 'Cursor IDE', provider: 'cursor', installed: true, running: false, iconLetter: 'U', brandColor: '#00D1B2' }
 ]
 
 // animate: 팝업이 실제로 열릴 때만 true (설정 클릭 등 재렌더링 시 애니메이션이 다시 재생되어 깜빡이는 것 방지)
@@ -59,6 +62,7 @@ export function renderPopupView(container: HTMLElement, state: AppState, animate
       <div class="popup-body">
         ${renderTabContent(state)}
       </div>
+      ${renderPokemonPickerModal(state)}
     </div>
   `
 
@@ -66,6 +70,40 @@ export function renderPopupView(container: HTMLElement, state: AppState, animate
 
   const popupBody = container.querySelector('.popup-body')
   if (popupBody) popupBody.scrollTop = prevScrollTop
+}
+
+
+function renderPokemonPickerModal(state: AppState): string {
+  if (!pokemonPickerTarget) return ''
+  const target = pokemonPickerTarget
+  const currentAcc = state.usages.find(u => u.id === target.id)
+  const currentPoke = currentAcc?.pokemon || ''
+
+  return `
+    <div class="poke-modal-backdrop" id="poke-picker-backdrop">
+      <div class="poke-modal">
+        <div class="poke-modal-header">
+          <div class="poke-modal-title">
+            <span>⚡ 파트너 포켓몬 선택</span>
+            <span class="poke-modal-title-target">(${target.name})</span>
+          </div>
+          <button class="poke-modal-close" id="btn-close-poke-picker" title="닫기">&times;</button>
+        </div>
+        <div class="poke-modal-body">
+          ${Object.entries(POKEMON_PROFILES).map(([key, p]) => {
+            const isSel = currentPoke === key
+            return `
+              <div class="poke-card-option ${isSel ? 'selected' : ''}" data-poke-key="${key}" data-acc-id="${target.id}" title="${p.name}">
+                <img src="${p.sprite}" alt="${p.name}" onerror="this.onerror=null; this.src='${p.fallback}'" />
+                <span class="poke-card-name">${p.name}</span>
+                <span class="poke-card-num">No.${String(p.id).padStart(3, '0')}</span>
+              </div>
+            `
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `
 }
 
 function renderTabContent(state: AppState): string {
@@ -192,19 +230,29 @@ function renderUsageTab(state: AppState): string {
       `
       : ''
 
-    const iconHtml = renderAiIcon(u.provider, u.name, state.config.iconStyle, 24)
+    const iconHtml = renderAiIcon(u.provider, u.name, state.config.iconStyle, 20)
+    const poke = getPokemonForAccount(u.provider, u.name, primaryUsed, u.pokemon)
+    const isFainted = primaryUsed >= 100 || (u.weeklyQuota?.percentUsed ?? 0) >= 100
 
     return `
-      <div class="card">
-        <div class="card-header">
-          <div class="card-account-info">
-            ${iconHtml}
+      <div class="card" style="position: relative; overflow: hidden;">
+        <div class="card-header" style="align-items: center;">
+          <div class="card-account-info" style="gap: 10px;">
+            <div class="poke-avatar-box btn-pick-pokemon" data-acc-id="${u.id}" data-acc-name="${u.name}" title="파트너 포켓몬 변경 (클릭)" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%); border-radius: 50%;">
+              <img src="${poke.sprite}" alt="${poke.name}" style="width: 38px; height: 38px; object-fit: contain; image-rendering: pixelated; ${isFainted ? 'filter: grayscale(90%) contrast(80%); transform: rotate(25deg); opacity: 0.8;' : ''}" onerror="this.onerror=null; this.src='${poke.fallback}'" />
+            </div>
             <div>
-              <div class="card-account-name">${u.name}</div>
+              <div class="card-account-name" style="display: flex; align-items: center; gap: 6px;">
+                <span>${u.name}</span>
+                <button class="poke-change-btn btn-pick-pokemon" data-acc-id="${u.id}" data-acc-name="${u.name}" title="포켓몬 변경">⚡ ${poke.name} 변경</button>
+              </div>
               <div class="card-account-email">${statusLine(u)}</div>
             </div>
           </div>
-          <span class="card-badge ${badgeClass(u)}">${u.tier || u.status}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            ${iconHtml}
+            <span class="card-badge ${badgeClass(u)}">${u.tier || u.status}</span>
+          </div>
         </div>
 
         <div class="card-quota-grid">
@@ -215,6 +263,9 @@ function renderUsageTab(state: AppState): string {
               <span>${t('usageLabel')}</span>
             </div>
             <div class="quota-box-percent" style="color: ${primaryColor}">${primaryUsed}%</div>
+            <div class="quota-box-bar">
+              <div class="quota-box-fill" style="width: ${primaryUsed}%; background-color: ${primaryColor};"></div>
+            </div>
             <div class="quota-box-reset">${t('resetLabel', { time: `<strong>${u.primaryQuota.resetCountdown}</strong>` })}</div>
           </div>
           ` : `
@@ -224,6 +275,9 @@ function renderUsageTab(state: AppState): string {
               <span>${t('usageLabel')}</span>
             </div>
             <div class="quota-box-percent" style="color: ${primaryColor}">${primaryUsed}%</div>
+            <div class="quota-box-bar">
+              <div class="quota-box-fill" style="width: ${primaryUsed}%; background-color: ${primaryColor};"></div>
+            </div>
             <div class="quota-box-reset">${t('resetLabel', { time: `<strong>${u.primaryQuota.resetCountdown}</strong>` })}</div>
           </div>
           <div class="quota-box">
@@ -232,6 +286,9 @@ function renderUsageTab(state: AppState): string {
               <span>${t('usageLabel')}</span>
             </div>
             <div class="quota-box-percent" style="color: ${weeklyColor}">${weeklyUsed}%</div>
+            <div class="quota-box-bar">
+              <div class="quota-box-fill" style="width: ${weeklyColor}%; background-color: ${weeklyColor};"></div>
+            </div>
             <div class="quota-box-reset">${t('resetLabel', { time: `<strong>${u.weeklyQuota?.resetCountdown || '--'}</strong>` })}</div>
           </div>
           `}
@@ -545,6 +602,48 @@ function renderSettingsTab(state: AppState): string {
 let offsetUpdateTimeout: any = null
 
 function bindPopupEvents(container: HTMLElement, state: AppState) {
+
+  // 포켓몬 선택 모달 열기
+  container.querySelectorAll('.btn-pick-pokemon').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const accId = el.getAttribute('data-acc-id')
+      const accName = el.getAttribute('data-acc-name')
+      if (accId && accName) {
+        window.api.lockPopup()
+        pokemonPickerTarget = { id: accId, name: accName }
+        renderPopupView(container, state)
+      }
+    })
+  })
+
+  // 포켓몬 선택 모달 닫기
+  container.querySelector('#btn-close-poke-picker')?.addEventListener('click', () => {
+    pokemonPickerTarget = null
+    renderPopupView(container, state)
+  })
+
+  // 백드롭 클릭 시 모달 닫기
+  container.querySelector('#poke-picker-backdrop')?.addEventListener('click', (e) => {
+    if (e.target === container.querySelector('#poke-picker-backdrop')) {
+      pokemonPickerTarget = null
+      renderPopupView(container, state)
+    }
+  })
+
+  // 포켓몬 선택 카드 클릭
+  container.querySelectorAll('.poke-card-option').forEach((card) => {
+    card.addEventListener('click', () => {
+      const pokeKey = card.getAttribute('data-poke-key')
+      const accId = card.getAttribute('data-acc-id')
+      if (pokeKey && accId) {
+        window.api.setAccountPokemon(accId, pokeKey)
+        pokemonPickerTarget = null
+        window.api.refreshQuota()
+      }
+    })
+  })
+
   // 닫기 버튼
   container.querySelector('#btn-close-popup')?.addEventListener('click', () => {
     window.api.unlockPopup()

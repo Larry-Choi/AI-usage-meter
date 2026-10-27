@@ -1,7 +1,7 @@
 export type ThemeType = '1a' | '1b' | '1c' | '1d'
 export type IconStyle = 'color' | 'monochrome'
 export type PositionAlignment = 'right' | 'left'
-export type ProviderType = 'google' | 'claude' | 'mistral' | 'xai' | 'openai' | 'antigravity' | 'codex' | 'custom'
+export type ProviderType = 'google' | 'claude' | 'mistral' | 'xai' | 'openai' | 'antigravity' | 'codex' | 'cursor' | 'custom'
 
 export interface QuotaInfo {
   remainingFraction: number // 0.0 ~ 1.0 (남은 비율)
@@ -38,6 +38,7 @@ export interface AccountUsage {
   weeklyQuota?: QuotaInfo // 주간 한도
   isWeeklyOnly?: boolean // ChatGPT Pro 등 5시간 세션 쿼터 없이 1주일 쿼터만 존재하는 계정 여부
   models?: ModelQuotaDetail[]
+  pokemon?: string
   updatedAt: string
 }
 
@@ -47,6 +48,7 @@ export interface AccountConfig {
   provider: ProviderType
   enabled: boolean
   isLocalIde?: boolean
+  pokemon?: string
   customMock?: {
     primaryPercent: number
     primaryReset: string

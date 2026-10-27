@@ -13,7 +13,7 @@ const execAsync = promisify(exec)
 export interface DetectedApp {
   id: string
   name: string
-  provider: 'antigravity' | 'claude' | 'codex' | 'google' | 'openai' | 'custom'
+  provider: 'antigravity' | 'claude' | 'codex' | 'cursor' | 'openai' | 'custom'
   installed: boolean
   running: boolean
   description: string
@@ -120,6 +120,26 @@ export class LocalAppDetector {
       description: codexLoggedIn ? '로컬 세션 감지됨 (연결 완료)' : (codexInstalled ? '설치됨 (연결 가능)' : '미설치 (기본 프리셋 제공)'),
       iconLetter: 'X',
       brandColor: '#6366F1'
+    })
+
+    // 4. Cursor IDE 감지
+    const cursorDbPath = path.join(appData || path.join(homeDir, 'AppData', 'Roaming'), 'Cursor', 'User', 'globalStorage', 'state.vscdb')
+    const cursorInstalled = fs.existsSync(cursorDbPath)
+    let cursorRunning = false
+    try {
+      const { stdout } = await execAsync('tasklist /FI "IMAGENAME eq Cursor.exe" /FO CSV /NH', { timeout: 2000, windowsHide: true })
+      cursorRunning = /^"Cursor\.exe"/im.test(stdout.trim())
+    } catch {}
+
+    results.push({
+      id: 'local-cursor',
+      name: 'Cursor IDE',
+      provider: 'cursor',
+      installed: cursorInstalled,
+      running: cursorRunning || cursorInstalled,
+      description: cursorInstalled ? '로컬 세션 DB 감지됨 (실시간 연동)' : '미설치',
+      iconLetter: 'U',
+      brandColor: '#00D1B2'
     })
 
     return results

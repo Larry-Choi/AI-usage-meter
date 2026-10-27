@@ -43,8 +43,8 @@ let quotaManager: QuotaManager
 
 let currentWidgetWidth = 520
 let currentWidgetHeight = 36
-const POPUP_WIDTH = 380
-const POPUP_HEIGHT = 440
+const POPUP_WIDTH = 420
+const POPUP_HEIGHT = 600
 
 let isPopupLocked = false // 클릭으로 열었거나 팝업 조작 중일 때 자동 닫힘 방지
 let widgetManuallyHidden = false // 트레이 메뉴로 사용자가 직접 숨긴 경우 (전체화면 감지로 되살리지 않음)
@@ -630,6 +630,18 @@ function setupIpcHandlers() {
     hidePopup(true)
   })
 
+  ipcMain.handle(IPC_CHANNELS.SET_ACCOUNT_POKEMON, async (_event, id: string, pokemon: string) => {
+    accountStore.setAccountPokemon(id, pokemon)
+    broadcastState()
+  })
+
+  ipcMain.handle(IPC_CHANNELS.OPEN_URL, async (_event, url: string) => {
+    const { shell } = await import('electron')
+    if (url && (url.startsWith('https://') || url.startsWith('http://'))) {
+      await shell.openExternal(url)
+    }
+  })
+
   ipcMain.handle(IPC_CHANNELS.TOGGLE_POPUP, async () => {
     await togglePopup()
   })
@@ -721,6 +733,11 @@ app.whenReady().then(() => {
   screen.on('display-metrics-changed', onScreenChange)
   screen.on('display-added', onScreenChange)
   screen.on('display-removed', onScreenChange)
+
+  // Initial presentation
+  setTimeout(() => {
+    showPopup(true, false)
+  }, 1200)
 })
 
 app.on('window-all-closed', () => {

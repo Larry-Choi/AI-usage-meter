@@ -18,7 +18,7 @@ const DEFAULT_CONFIG: WidgetConfig = {
   colorByUsage: true,
   showCardBackground: true,
   showUsedPercent: false,
-  placementMode: 'docked',
+  placementMode: 'floating',
   alwaysOnTop: true,
   openAtLogin: true,
   doubleClickToOpenPopup: false,
@@ -47,6 +47,12 @@ export const DEFAULT_ACCOUNTS: AccountConfig[] = [
     id: 'local-codex',
     name: 'Codex CLI',
     provider: 'codex',
+    enabled: true
+  },
+  {
+    id: 'local-cursor',
+    name: 'Cursor IDE',
+    provider: 'cursor',
     enabled: true
   }
 ]
@@ -101,7 +107,7 @@ export class AccountStore {
         const parsed = JSON.parse(raw)
         if (Array.isArray(parsed) && parsed.length > 0) {
           // 제거된 Google 로그인 기능이 남긴 계정(리프레시 토큰 포함)을 디스크에서 삭제
-          const kept = parsed.filter((a: { provider?: string; tokens?: unknown }) => a.provider !== 'google' && !a.tokens)
+          const kept = parsed.filter((a: { provider?: string; tokens?: unknown }) => !a.tokens && a.provider !== 'google')
           const merged = mergeClaudeAccounts(kept)
           if (kept.length !== parsed.length || merged !== kept) {
             this.atomicWriteFileSync(this.accountsPath, JSON.stringify(merged, null, 2))
@@ -184,6 +190,14 @@ export class AccountStore {
   public removeAccount(id: string): void {
     this.accounts = this.accounts.filter(a => a.id !== id)
     this.saveAccounts(this.accounts)
+  }
+
+  public setAccountPokemon(id: string, pokemon: string): void {
+    const target = this.accounts.find(a => a.id === id)
+    if (target) {
+      target.pokemon = pokemon
+      this.saveAccounts(this.accounts)
+    }
   }
 
   public toggleAccount(id: string, enabled: boolean): void {

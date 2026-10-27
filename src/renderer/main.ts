@@ -71,9 +71,11 @@ function renderWidget(state: AppState) {
       <div class="white-circle-dot" title="${t('noAccountTitle')}"></div>
     `
   } else {
-    accountsHtml = activeUsages.map((u) => {
-      // 테마는 status 를 보지 않으므로, 실측값이 없는 계정을 그대로 넘기면 "100% 남음"이 표시된다.
-      // 4개 테마를 각각 고치는 대신 진입점에서 한 번 걸러낸다.
+    const MAX_WIDGET_ITEMS = 3
+    const visibleUsages = activeUsages.slice(0, MAX_WIDGET_ITEMS)
+    const extraCount = activeUsages.length - MAX_WIDGET_ITEMS
+
+    const itemsHtml = visibleUsages.map((u) => {
       if (u.status === 'error' || u.status === 'unauthenticated' || u.status === 'loading') {
         return renderUnavailable(u, state.config)
       }
@@ -89,6 +91,14 @@ function renderWidget(state: AppState) {
           return renderTheme1a(u, state.config)
       }
     }).join('')
+
+    const moreBadgeHtml = extraCount > 0 ? `
+      <div class="account-item-more-badge" title="외 ${extraCount}개 계정 더보기 (클릭하여 전체 팝업 열기)">
+        +${extraCount}
+      </div>
+    ` : ''
+
+    accountsHtml = itemsHtml + moreBadgeHtml
   }
 
   const showCard = state.config.showCardBackground ?? false
@@ -111,7 +121,7 @@ function renderWidget(state: AppState) {
           const rect = container.getBoundingClientRect()
           const naturalWidth = Math.max(rect.width, container.scrollWidth)
           // 여유 너비 +24px, 높이는 34px 기본에 맞춰 설정
-          const width = Math.ceil(naturalWidth) + 24
+          const width = Math.ceil(naturalWidth) + 36
           const height = Math.max(34, Math.ceil(rect.height) + 4)
           if (width !== lastSentWidth || height !== lastSentHeight) {
             lastSentWidth = width

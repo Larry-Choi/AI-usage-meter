@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { formatCountdown } from '../common/time-utils.js'
 import type { AccountConfig, AccountUsage, ModelQuotaDetail, QuotaInfo } from '../common/types.js'
+import { AntigravityLspClient } from './antigravity-lsp-client.js'
 
 type AgyErrorCode =
   | 'ANTIGRAVITY_CLI_NOT_FOUND'
@@ -186,7 +187,12 @@ export class AntigravityCliClient {
   public static async fetchUsage(account: AccountConfig): Promise<AccountUsage> {
     try {
       const agyPath = this.findAgy()
-      if (!agyPath) throw new AgyError('ANTIGRAVITY_CLI_NOT_FOUND')
+      if (!agyPath) {
+        // CLI 가 없으면 실행 중인 Antigravity IDE 의 language_server 에 직접 질의
+        const lsp = await AntigravityLspClient.fetchUsage(account)
+        if (lsp) return lsp
+        throw new AgyError('ANTIGRAVITY_CLI_NOT_FOUND')
+      }
       return this.toUsage(account, await this.runUsage(agyPath))
     } catch (e) {
       const code: AgyErrorCode = e instanceof AgyError ? e.code : 'ANTIGRAVITY_QUOTA_UNAVAILABLE'

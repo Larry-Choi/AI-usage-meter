@@ -20,5 +20,7 @@ export const IPC_CHANNELS = {
   SCHEDULE_HIDE_POPUP: 'window:schedule-hide-popup',
   CANCEL_HIDE_POPUP: 'window:cancel-hide-popup',
   POPUP_OPENED: 'popup:opened',
-  POPUP_READY: 'window:popup-ready'
+  POPUP_READY: 'window:popup-ready',
+  SET_ACCOUNT_POKEMON: 'account:set-pokemon',
+  OPEN_URL: 'app:open-url'
 } as const

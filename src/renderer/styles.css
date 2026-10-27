@@ -617,11 +617,13 @@ body.is-widget-view #app {
 .card {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
+  min-height: fit-content;
   transition: border-color 0.15s ease;
 }
 
@@ -695,12 +697,27 @@ body.is-widget-view #app {
 }
 
 .quota-box {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 8px;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 9px 11px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  min-height: 72px;
+}
+.quota-box-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+.quota-box-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .quota-box-title {
@@ -953,3 +970,314 @@ body.is-widget-view #app {
 }
 
 
+
+
+/* ==========================================================================
+   포켓몬 선택 모달 & 아바타 상호작용
+   ========================================================================== */
+.poke-avatar-box {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.poke-avatar-box:hover {
+  transform: scale(1.12);
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.poke-avatar-box::after {
+  content: '🔄';
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  font-size: 10px;
+  background: #1e1e24;
+  border: 1px solid #f59e0b;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.15s ease;
+}
+
+.poke-avatar-box:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.poke-change-btn {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.poke-change-btn:hover {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+}
+
+
+/* 모달 오버레이 */
+.poke-modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(8, 9, 13, 0.98) !important;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.poke-modal {
+  background: #13151c !important;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  width: 100%;
+  max-height: 530px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95), 0 0 24px rgba(245, 158, 11, 0.2);
+  overflow: hidden;
+}
+
+.poke-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1b1e2b;
+}
+
+.poke-modal-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f9fafb;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.poke-modal-title-target {
+  font-size: 11px;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.poke-modal-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d1d5db;
+  font-size: 16px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.poke-modal-close:hover {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  border-color: #f87171;
+}
+
+.poke-modal-body {
+  padding: 14px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  background: #0f1117 !important;
+}
+
+.poke-card-option {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.poke-card-option:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #fbbf24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+.poke-card-option.selected {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+}
+
+.poke-card-option img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+}
+
+.poke-card-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+
+.poke-card-num {
+  font-size: 9px;
+  color: #9ca3af;
+}
+
+.account-item-more-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #d1d5db;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.account-item-more-badge:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #fbbf24;
+  color: #fbbf24;
+  transform: scale(1.05);
+}
+
+/* ==========================================================================
+   고도화된 모던 글래스모피즘 & 네온 UI 테마
+   ========================================================================== */
+.widget-root {
+  border-radius: 9px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(24, 27, 38, var(--bg-alpha)), rgba(14, 16, 24, var(--bg-alpha)));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.widget-root:hover {
+  background: linear-gradient(135deg, rgba(32, 36, 50, 0.96), rgba(20, 23, 34, 0.98));
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.popup-root {
+  background: linear-gradient(180deg, rgba(22, 25, 36, 0.97) 0%, rgba(13, 15, 22, 0.99) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.popup-header {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 13px 16px;
+}
+
+.popup-title-badge {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #93c5fd;
+  padding: 2px 8px;
+  font-weight: 700;
+}
+
+.popup-tabs {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.popup-tab.active {
+  color: #60a5fa;
+  border-bottom: 2px solid #3b82f6;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0.018) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  padding: 13px 15px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card:hover {
+  border-color: rgba(96, 165, 250, 0.32);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.028) 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42), 0 0 16px rgba(59, 130, 246, 0.08);
+}
+
+.quota-box {
+  background: rgba(8, 10, 16, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 9px;
+  padding: 10px 12px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.quota-box-bar {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.quota-box-fill {
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.card-badge {
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}

@@ -9,6 +9,13 @@ export function findClaudeDataDirs(env: NodeJS.ProcessEnv = process.env): string
   const dirs: string[] = []
   if (env.APPDATA) dirs.push(path.join(env.APPDATA, 'Claude'))
   if (env.LOCALAPPDATA) {
+    // 최신 Microsoft Store판은 패키지 밖 %LOCALAPPDATA%\Claude-Data\claude_<id> 에 데이터를 둔다
+    const relocated = path.join(env.LOCALAPPDATA, 'Claude-Data')
+    try {
+      for (const entry of fs.readdirSync(relocated, { withFileTypes: true })) {
+        if (entry.isDirectory() && /^claude_/i.test(entry.name)) dirs.push(path.join(relocated, entry.name))
+      }
+    } catch { /* optional */ }
     const packages = path.join(env.LOCALAPPDATA, 'Packages')
     try {
       for (const entry of fs.readdirSync(packages, { withFileTypes: true })) {
